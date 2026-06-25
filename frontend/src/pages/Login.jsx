@@ -113,9 +113,9 @@ function Login() {
             {loading ? "Signing in…" : "Sign in →"}
           </button>
 
-          <p className="auth-footer-text">
-            New here? <a href="/signup">Create a free account</a>
-          </p>
+        <p className="auth-footer-text">
+                  New here? <Link to="/signup">Create a free account</Link>
+            </p>
         </div>
 
       </div>
