@@ -89,22 +89,34 @@ function Interview() {
   const [loading,         setLoading]         = useState(false);
   const [role,            setRole]            = useState("Software Engineer");
   const [difficulty,      setDifficulty]      = useState("Intermediate");
-  const [resumes,         setResumes]         = useState([]);
-  const [selectedResume,  setSelectedResume]  = useState("");
+  const [resume, setResume] = useState(null);
   const [error,           setError]           = useState("");
 
   const questionsRef = useRef(null);
   const navigate     = useNavigate();
 
   // Load resumes on mount
-  useEffect(() => {
-    getResumes()
-      .then((res) => {
-        setResumes(res.data.resumes);
-        if (res.data.resumes.length > 0) setSelectedResume(res.data.resumes[0]);
-      })
-      .catch(() => {});
-  }, []);
+  <div className="config-field">
+    <label>Upload Resume (PDF)</label>
+
+    <input
+        type="file"
+        accept=".pdf"
+        onChange={(e) => setResume(e.target.files[0])}
+    />
+
+    {resume && (
+        <p
+            style={{
+                marginTop: "8px",
+                color: "#8b5cf6",
+                fontSize: "14px"
+            }}
+        >
+            📄 {resume.name}
+        </p>
+    )}
+</div>
 
   // Generate questions
   const handleGenerate = async () => {
@@ -118,7 +130,13 @@ function Interview() {
     setAnswers({});
     setEvaluations({});
     try {
-      const res = await generateQuestions({ role, difficulty, resume: selectedResume });
+      const formData = new FormData();
+
+      formData.append("resume", resume);
+      formData.append("role", role);
+      formData.append("difficulty", difficulty);
+
+      const res = await generateQuestions(formData);
       setQuestions(res.data.questions || []);
       setTimeout(() => questionsRef.current?.scrollIntoView({ behavior: "smooth" }), 200);
     } catch {

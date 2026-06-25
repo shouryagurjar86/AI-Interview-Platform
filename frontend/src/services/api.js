@@ -22,8 +22,18 @@ export const analyzeResume = () => {
   return api.post("/analyze-resume");
 };
 
-export const generateQuestions = (data) => {
-    return api.post("/generate-questions", data);
+export const generateQuestions = (formData) => {
+
+    return api.post(
+        "/generate-questions",
+        formData,
+        {
+            headers: {
+                "Content-Type": "multipart/form-data"
+            }
+        }
+    );
+
 };
 
 export const getResumes = () => {

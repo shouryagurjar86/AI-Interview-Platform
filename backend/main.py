@@ -26,6 +26,7 @@ from models import InterviewResult
 from fastapi.middleware.cors import CORSMiddleware
 app = FastAPI()
 
+from fastapi import UploadFile, File,Form
 
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -143,24 +144,32 @@ async def analyze_uploaded_resume():
     }
 @app.post("/generate-questions")
 async def generate_interview_questions(
-    request: QuestionRequest
+    resume: UploadFile = File(...),
+    role: str = Form(...),
+    difficulty: str = Form(...)
 ):
 
+    # Save uploaded resume
+    os.makedirs("uploads", exist_ok=True)
+
     resume_path = os.path.join(
-    "uploads",
-    request.resume
-)
+        "uploads",
+        "current_resume.pdf"
+    )
 
-    if not os.path.exists(resume_path):
-        return {"error": "Resume not found"}
+    with open(resume_path, "wb") as buffer:
+        buffer.write(await resume.read())
 
+    # Extract resume text
     resume_text = extract_text_from_pdf(
-    resume_path
-)
-    questions = generate_questions( 
+        resume_path
+    )
+
+    # Generate interview questions
+    questions = generate_questions(
         resume_text,
-        request.role,
-        request.difficulty
+        role,
+        difficulty
     )
 
     return questions
