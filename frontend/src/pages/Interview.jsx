@@ -95,32 +95,11 @@ function Interview() {
   const questionsRef = useRef(null);
   const navigate     = useNavigate();
 
-  // Load resumes on mount
-  <div className="config-field">
-    <label>Upload Resume (PDF)</label>
-
-    <input
-        type="file"
-        accept=".pdf"
-        onChange={(e) => setResume(e.target.files[0])}
-    />
-
-    {resume && (
-        <p
-            style={{
-                marginTop: "8px",
-                color: "#8b5cf6",
-                fontSize: "14px"
-            }}
-        >
-            📄 {resume.name}
-        </p>
-    )}
-</div>
+  
 
   // Generate questions
   const handleGenerate = async () => {
-    if (!selectedResume) {
+    if (!resume) {
       setError("Please upload a resume first via the Resume Analysis page.");
       return;
     }
@@ -221,13 +200,29 @@ function Interview() {
           <h2>Session Setup</h2>
           <div className="config-grid">
 
-            <div className="config-field">
-              <label>Resume</label>
-              <select value={selectedResume} onChange={(e) => setSelectedResume(e.target.value)}>
-                {resumes.length === 0 && <option value="">No resumes uploaded</option>}
-                {resumes.map((r, i) => <option key={i} value={r}>{r}</option>)}
-              </select>
-            </div>
+           <div className="config-field">
+
+            <label>Upload Resume (PDF)</label>
+
+            <div className="file-upload-box">
+
+              <input
+                type="file"
+                accept=".pdf"
+                  onChange={(e) => setResume(e.target.files[0])}
+                />
+
+                </div>
+
+               {
+                 resume && (
+                    <p className="resume-name">
+                      📄 {resume.name}
+                      </p>
+                   )
+                    }
+
+                 </div>
 
             <div className="config-field">
               <label>Target Role</label>
