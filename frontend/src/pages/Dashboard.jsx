@@ -7,7 +7,7 @@ function Dashboard() {
   const [stats, setStats] = useState(null);
 
   useEffect(() => {
-    axios.get("http://127.0.0.1:8000/dashboard-stats")
+    axios.get("https://beata-nontheoretic-weldon.ngrok-free.dev/dashboard-stats")
       .then((res) => setStats(res.data))
       .catch(() => {});
   }, []);

@@ -135,7 +135,7 @@ function Interview() {
 
     setEvalLoading((prev) => ({ ...prev, [index]: true }));
     try {
-      const res = await axios.post("http://127.0.0.1:8000/evaluate-answer", {
+      const res = await axios.post("https://beata-nontheoretic-weldon.ngrok-free.dev/evaluate-answer", {
         question: questions[index],
         answer,
       });
