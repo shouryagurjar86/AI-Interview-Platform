@@ -1,7 +1,16 @@
-import { useState, useEffect, useRef } from "react";
-import { generateQuestions, getResumes } from "../services/api";
-import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import {
+  useState,
+  useRef
+} from "react";
+
+import {
+  generateQuestions,
+  evaluateAnswer
+} from "../services/api";
+
+import {
+  useNavigate
+} from "react-router-dom";
 
 // ── helpers ──────────────────────────────────────────────────────
 const scoreClass  = (s) => s >= 7 ? "score-high"  : s >= 4 ? "score-mid"  : "score-low";
@@ -98,54 +107,197 @@ function Interview() {
   
 
   // Generate questions
-  const handleGenerate = async () => {
-    if (!resume) {
-      setError("Please upload a resume first via the Resume Analysis page.");
-      return;
-    }
-    setError("");
-    setLoading(true);
-    setQuestions([]);
-    setAnswers({});
-    setEvaluations({});
-    try {
-      const formData = new FormData();
+const handleGenerate = async () => {
 
-      formData.append("resume", resume);
-      formData.append("role", role);
-      formData.append("difficulty", difficulty);
+  const userId =
+    localStorage.getItem("userId");
 
-      const res = await generateQuestions(formData);
-      setQuestions(res.data.questions || []);
-      setTimeout(() => questionsRef.current?.scrollIntoView({ behavior: "smooth" }), 200);
-    } catch {
-      setError("Failed to generate questions. Make sure your backend is running.");
-    } finally {
-      setLoading(false);
-    }
-  };
+
+  if (!userId) {
+
+    navigate("/");
+
+    return;
+  }
+
+
+  if (!resume) {
+
+    setError(
+      "Please upload a resume first."
+    );
+
+    return;
+  }
+
+
+  setError("");
+
+  setLoading(true);
+
+  setQuestions([]);
+
+  setAnswers({});
+
+  setEvaluations({});
+
+
+  try {
+
+    const formData =
+      new FormData();
+
+
+    formData.append(
+      "user_id",
+      userId
+    );
+
+    formData.append(
+      "resume",
+      resume
+    );
+
+    formData.append(
+      "role",
+      role
+    );
+
+    formData.append(
+      "difficulty",
+      difficulty
+    );
+
+
+    const res =
+      await generateQuestions(
+        formData
+      );
+
+
+    setQuestions(
+      res.data.questions || []
+    );
+
+
+    setTimeout(
+      () =>
+        questionsRef.current?.scrollIntoView({
+          behavior: "smooth"
+        }),
+      200
+    );
+
+
+  } catch (err) {
+
+    console.error(err);
+
+    setError(
+      err.response?.data?.detail ||
+      "Failed to generate questions."
+    );
+
+
+  } finally {
+
+    setLoading(false);
+
+  }
+};
 
   // Submit a single answer for evaluation
-  const handleEvaluate = async (index) => {
-    const answer = (answers[index] || "").trim();
-    if (!answer) return;
+const handleEvaluate = async (index) => {
 
-    setEvalLoading((prev) => ({ ...prev, [index]: true }));
-    try {
-      const res = await axios.post("https://beata-nontheoretic-weldon.ngrok-free.dev/evaluate-answer", {
-        question: questions[index],
-        answer,
+  const userId =
+    localStorage.getItem("userId");
+
+
+  if (!userId) {
+
+    navigate("/");
+
+    return;
+  }
+
+
+  const answer =
+    (answers[index] || "").trim();
+
+
+  if (!answer) {
+    return;
+  }
+
+
+  setEvalLoading(
+    (prev) => ({
+      ...prev,
+      [index]: true
+    })
+  );
+
+
+  try {
+
+    const res =
+      await evaluateAnswer({
+
+        user_id: Number(userId),
+
+        question:
+          questions[index],
+
+        answer
+
       });
-      setEvaluations((prev) => ({ ...prev, [index]: res.data }));
-    } catch {
-      setEvaluations((prev) => ({
+
+
+    setEvaluations(
+      (prev) => ({
         ...prev,
-        [index]: { score: 0, strengths: [], weaknesses: ["Evaluation failed — check your backend."], improved_answer: "" },
-      }));
-    } finally {
-      setEvalLoading((prev) => ({ ...prev, [index]: false }));
-    }
-  };
+        [index]: res.data
+      })
+    );
+
+
+  } catch (err) {
+
+    console.error(err);
+
+
+    setEvaluations(
+      (prev) => ({
+        ...prev,
+
+        [index]: {
+
+          score: 0,
+
+          strengths: [],
+
+          weaknesses: [
+            "Evaluation failed — check your backend."
+          ],
+
+          improved_answer: ""
+
+        }
+      })
+    );
+
+
+  } finally {
+
+    setEvalLoading(
+      (prev) => ({
+        ...prev,
+        [index]: false
+      })
+    );
+
+  }
+};
 
   // ── derived stats ──────────────────────────────────────────────
   const answeredCount = Object.keys(evaluations).length;

@@ -1,65 +1,114 @@
 import google.generativeai as genai
 import os
 import json
+import re
+
 from dotenv import load_dotenv
+
 
 load_dotenv()
 
+
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+
+if not GEMINI_API_KEY:
+    raise RuntimeError(
+        "GEMINI_API_KEY is not configured."
+    )
+
+
 genai.configure(
-    api_key=os.getenv("GEMINI_API_KEY")
+    api_key=GEMINI_API_KEY
 )
 
-model = genai.GenerativeModel("gemini-2.5-flash")
 
-print(os.getenv("GEMINI_API_KEY"))
+model = genai.GenerativeModel(
+    "gemini-2.5-flash"
+)
+
+
+def parse_json_response(text: str):
+
+    text = text.strip()
+
+    # Remove markdown code blocks if Gemini returns them
+    text = re.sub(
+        r"^```json\s*",
+        "",
+        text,
+        flags=re.IGNORECASE
+    )
+
+    text = re.sub(
+        r"^```\s*",
+        "",
+        text
+    )
+
+    text = re.sub(
+        r"\s*```$",
+        "",
+        text
+    )
+
+    return json.loads(text)
 
 
 def analyze_resume(resume_text):
 
     prompt = f"""
-    Analyze this resume and return ONLY valid JSON.
+Analyze the following resume.
 
-    Resume:
-    {resume_text}
+Return ONLY valid JSON.
 
-    Format:
+Resume:
+{resume_text}
 
-    {{
-        "skills": [
-            "skill1",
-            "skill2"
-        ],
-        "strengths": [
-            "strength1",
-            "strength2"
-        ],
-        "weaknesses": [
-            "weakness1",
-            "weakness2"
-        ],
-        "recommended_roles": [
-            "role1",
-            "role2"
-        ]
-    }}
+Use exactly this format:
 
-    Rules:
-    - Return ONLY JSON
-    - No markdown
-    - No explanation outside JSON
-    - No ```json blocks
-    """
+{{
+    "skills": [
+        "skill1",
+        "skill2"
+    ],
+    "strengths": [
+        "strength1",
+        "strength2"
+    ],
+    "weaknesses": [
+        "weakness1",
+        "weakness2"
+    ],
+    "recommended_roles": [
+        "role1",
+        "role2"
+    ]
+}}
+
+Rules:
+- Return ONLY JSON
+- No markdown
+- No explanation outside JSON
+"""
+
 
     response = model.generate_content(prompt)
 
-    return json.loads(response.text)
+    return parse_json_response(
+        response.text
+    )
 
-def generate_questions(resume_text, role, difficulty):
+
+def generate_questions(
+    resume_text,
+    role,
+    difficulty
+):
 
     prompt = f"""
 You are an AI Interviewer.
 
-Generate EXACTLY 10 interview questions in VALID JSON.
+Generate EXACTLY 10 interview questions.
 
 Candidate Resume:
 {resume_text}
@@ -71,15 +120,16 @@ Difficulty:
 {difficulty}
 
 Requirements:
-- Focus on the candidate's skills.
-- Ask questions related to projects.
-- Include scenario-based questions.
+- Questions must be relevant to the candidate's resume.
+- Include project-based questions.
 - Include technical questions.
-- No explanations.
-- No markdown.
-- No code block.
+- Include scenario-based questions.
+- Match the selected role.
+- Match the selected difficulty.
+- Do not provide answers.
+- Do not provide explanations.
 
-Return ONLY this JSON format:
+Return ONLY valid JSON:
 
 {{
     "questions": [
@@ -97,42 +147,55 @@ Return ONLY this JSON format:
 }}
 """
 
+
     response = model.generate_content(prompt)
 
-    # Parse Gemini's JSON response
-    data = json.loads(response.text)
+    return parse_json_response(
+        response.text
+    )
 
-    return data
 
-def evaluate_answer(question, answer):
+def evaluate_answer(
+    question,
+    answer
+):
 
     prompt = f"""
-    Evaluate this interview answer.
+Evaluate this interview answer.
 
-    Question:
-    {question}
+Question:
+{question}
 
-    Answer:
-    {answer}
+Candidate Answer:
+{answer}
 
-    Return ONLY valid JSON.
+Evaluate the answer fairly.
 
-    {{
-        "score": 0,
-        "strengths": [
-            ""
-        ],
-        "weaknesses": [
-            ""
-        ],
-        "improved_answer": ""
-    }}
+Return ONLY valid JSON:
 
-    Do not include markdown.
-    Do not include ```json.
-    Return only JSON.
-    """
+{{
+    "score": 0,
+    "strengths": [
+        "strength1"
+    ],
+    "weaknesses": [
+        "weakness1"
+    ],
+    "improved_answer": "A better version of the candidate answer."
+}}
+
+Rules:
+- Score must be an integer from 0 to 10.
+- Give useful strengths.
+- Give useful weaknesses.
+- Provide a realistic improved answer.
+- Return ONLY JSON.
+- No markdown.
+"""
+
 
     response = model.generate_content(prompt)
 
-    return json.loads(response.text)
+    return parse_json_response(
+        response.text
+    )
