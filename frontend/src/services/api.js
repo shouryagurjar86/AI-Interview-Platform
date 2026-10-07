@@ -1,5 +1,10 @@
 import axios from "axios";
 
+
+// =========================================================
+// AXIOS INSTANCE
+// =========================================================
+
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
   timeout: 120000,
@@ -7,7 +12,7 @@ const api = axios.create({
 
 
 // =========================================================
-// SIGNUP
+// AUTH
 // =========================================================
 
 export const signupUser = (data) => {
@@ -15,17 +20,18 @@ export const signupUser = (data) => {
 };
 
 
-// =========================================================
-// LOGIN
-// =========================================================
-
 export const loginUser = (data) => {
   return api.post("/login", data);
 };
 
 
+export const getMe = (userId) => {
+  return api.get(`/me/${userId}`);
+};
+
+
 // =========================================================
-// RESUME UPLOAD
+// RESUME
 // =========================================================
 
 export const uploadResume = (formData) => {
@@ -41,17 +47,18 @@ export const uploadResume = (formData) => {
 };
 
 
-// =========================================================
-// RESUME ANALYSIS
-// =========================================================
-
 export const analyzeResume = () => {
   return api.post("/analyze-resume");
 };
 
 
+export const getResumes = () => {
+  return api.get("/resumes");
+};
+
+
 // =========================================================
-// GENERATE QUESTIONS
+// INTERVIEW
 // =========================================================
 
 export const generateQuestions = (formData) => {
@@ -67,26 +74,16 @@ export const generateQuestions = (formData) => {
 };
 
 
-// =========================================================
-// GET RESUMES
-// =========================================================
-
-export const getResumes = () => {
-  return api.get("/resumes");
+export const evaluateAnswer = (data) => {
+  return api.post(
+    "/evaluate-answer",
+    data
+  );
 };
 
 
 // =========================================================
-// GET INTERVIEW HISTORY
-// =========================================================
-
-export const getInterviewHistory = () => {
-  return api.get("/interview-history");
-};
-
-
-// =========================================================
-// GET DASHBOARD STATS
+// DASHBOARD
 // =========================================================
 
 export const getDashboardStats = () => {
@@ -94,8 +91,24 @@ export const getDashboardStats = () => {
 };
 
 
+export const getInterviewHistory = () => {
+  return api.get("/interview-history");
+};
+
+
 // =========================================================
-// DEFAULT AXIOS INSTANCE
+// PERFORMANCE HISTORY
+// =========================================================
+
+export const deleteInterviewResult = (id) => {
+  return api.delete(
+    `/interview-history/${id}`
+  );
+};
+
+
+// =========================================================
+// DEFAULT EXPORT
 // =========================================================
 
 export default api;
