@@ -1,136 +1,101 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "https://beata-nontheoretic-weldon.ngrok-free.dev",
+  baseURL: import.meta.env.VITE_API_URL,
   timeout: 120000,
 });
 
-// Signup
+
+// =========================================================
+// SIGNUP
+// =========================================================
+
 export const signupUser = (data) => {
   return api.post("/signup", data);
 };
 
-// Login
+
+// =========================================================
+// LOGIN
+// =========================================================
+
 export const loginUser = (data) => {
   return api.post("/login", data);
 };
 
-// Get user
-export const getMe = (userId) => {
-  return api.get(`/me/${userId}`);
-};
 
+// =========================================================
+// RESUME UPLOAD
+// =========================================================
 
- 
-
-export const uploadResume = (
-  formData
-) => {
-
+export const uploadResume = (formData) => {
   return api.post(
     "/upload-resume",
-    formData
-  );
-};
-
-
-export const analyzeResume = (
-  userId
-) => {
-
-  return api.post(
-    "/analyze-resume",
-    null,
+    formData,
     {
-      params: {
-        user_id: userId
-      }
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
     }
   );
 };
 
 
-export const generateQuestions = (
-  formData
-) => {
+// =========================================================
+// RESUME ANALYSIS
+// =========================================================
 
+export const analyzeResume = () => {
+  return api.post("/analyze-resume");
+};
+
+
+// =========================================================
+// GENERATE QUESTIONS
+// =========================================================
+
+export const generateQuestions = (formData) => {
   return api.post(
     "/generate-questions",
-    formData
-  );
-};
-
-
-export const evaluateAnswer = (
-  data
-) => {
-
-  return api.post(
-    "/evaluate-answer",
-    data
-  );
-};
-
-
-export const getInterviewHistory = (
-  userId
-) => {
-
-  return api.get(
-    "/interview-history",
+    formData,
     {
-      params: {
-        user_id: userId
-      }
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
     }
   );
 };
 
 
-export const deleteInterviewResult = (
-  resultId,
-  userId
-) => {
+// =========================================================
+// GET RESUMES
+// =========================================================
 
-  return api.delete(
-    `/interview-history/${resultId}`,
-    {
-      params: {
-        user_id: userId
-      }
-    }
-  );
+export const getResumes = () => {
+  return api.get("/resumes");
 };
 
 
-export const getDashboardStats = (
-  userId
-) => {
+// =========================================================
+// GET INTERVIEW HISTORY
+// =========================================================
 
-  return api.get(
-    "/dashboard-stats",
-    {
-      params: {
-        user_id: userId
-      }
-    }
-  );
+export const getInterviewHistory = () => {
+  return api.get("/interview-history");
 };
 
 
-export const getResumes = (
-  userId
-) => {
+// =========================================================
+// GET DASHBOARD STATS
+// =========================================================
 
-  return api.get(
-    "/resumes",
-    {
-      params: {
-        user_id: userId
-      }
-    }
-  );
+export const getDashboardStats = () => {
+  return api.get("/dashboard-stats");
 };
 
+
+// =========================================================
+// DEFAULT AXIOS INSTANCE
+// =========================================================
 
 export default api;

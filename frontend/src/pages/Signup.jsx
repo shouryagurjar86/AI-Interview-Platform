@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { signupUser } from "../services/api";
 
 
@@ -15,11 +15,17 @@ function Signup() {
   const navigate = useNavigate();
 
 
-  const handleSignup = async (e) => {
+  const handleSignup = async () => {
 
-    e.preventDefault();
+    // -----------------------------------------
+    // VALIDATION
+    // -----------------------------------------
 
-    if (!name.trim() || !email.trim() || !password) {
+    if (
+      !name.trim() ||
+      !email.trim() ||
+      !password
+    ) {
 
       setError(
         "Please fill in all fields."
@@ -39,11 +45,19 @@ function Signup() {
     }
 
 
+    // -----------------------------------------
+    // RESET ERROR
+    // -----------------------------------------
+
     setError("");
     setLoading(true);
 
 
     try {
+
+      // ---------------------------------------
+      // SEND REQUEST
+      // ---------------------------------------
 
       const response = await signupUser({
 
@@ -51,9 +65,48 @@ function Signup() {
 
         email: email.trim(),
 
-        password
+        password: password,
+
       });
 
+
+      console.log(
+        "SIGNUP RESPONSE:",
+        response.data
+      );
+
+
+      // ---------------------------------------
+      // BACKEND ERROR
+      // ---------------------------------------
+
+      if (response.data.error) {
+
+        setError(
+          response.data.error
+        );
+
+        return;
+      }
+
+
+      // ---------------------------------------
+      // CHECK USER ID
+      // ---------------------------------------
+
+      if (!response.data.user_id) {
+
+        setError(
+          "Account created, but user information was not returned."
+        );
+
+        return;
+      }
+
+
+      // ---------------------------------------
+      // SAVE USER INFORMATION
+      // ---------------------------------------
 
       localStorage.setItem(
         "userId",
@@ -62,28 +115,95 @@ function Signup() {
 
       localStorage.setItem(
         "userName",
-        response.data.name
+        response.data.name || name.trim()
       );
 
       localStorage.setItem(
         "userEmail",
-        response.data.email
+        response.data.email || email.trim()
       );
 
 
-      navigate(
-        "/dashboard"
-      );
+      // ---------------------------------------
+      // SUCCESS
+      // ---------------------------------------
 
+      navigate("/dashboard");
 
     } catch (err) {
 
-      const message =
-        err.response?.data?.detail ||
-        "Signup failed. Please try again.";
+      console.error(
+        "SIGNUP ERROR:",
+        err
+      );
 
-      setError(message);
 
+      // ---------------------------------------
+      // SERVER RESPONSE ERROR
+      // ---------------------------------------
+
+      if (err.response) {
+
+        console.error(
+          "STATUS:",
+          err.response.status
+        );
+
+        console.error(
+          "DATA:",
+          err.response.data
+        );
+
+
+        if (
+          err.response.data?.detail
+        ) {
+
+          setError(
+            err.response.data.detail
+          );
+
+        } else if (
+          err.response.data?.error
+        ) {
+
+          setError(
+            err.response.data.error
+          );
+
+        } else {
+
+          setError(
+            `Signup failed (${err.response.status}).`
+          );
+
+        }
+
+      }
+
+      // ---------------------------------------
+      // REQUEST WAS SENT BUT NO RESPONSE
+      // ---------------------------------------
+
+      else if (err.request) {
+
+        setError(
+          "Unable to reach the server. Please try again."
+        );
+
+      }
+
+      // ---------------------------------------
+      // OTHER ERROR
+      // ---------------------------------------
+
+      else {
+
+        setError(
+          "Signup failed. Please try again."
+        );
+
+      }
 
     } finally {
 
@@ -98,6 +218,11 @@ function Signup() {
     <div className="auth-page">
 
       <div className="auth-wrapper">
+
+
+        {/* =====================================
+            LEFT BRAND PANEL
+        ====================================== */}
 
         <div className="auth-brand">
 
@@ -124,7 +249,10 @@ function Signup() {
 
 
             <p>
-              Join thousands of candidates who practice smarter with AI-generated questions tailored to their resume and role.
+              Join thousands of candidates who
+              practice smarter with AI-generated
+              questions tailored to their resume
+              and role.
             </p>
 
           </div>
@@ -135,28 +263,34 @@ function Signup() {
             {[
               "Free to get started — no credit card needed",
               "AI feedback on every single answer",
-              "Track progress with performance history"
-            ].map((feature, index) => (
+              "Track progress with performance history",
+            ].map(
+              (feature, index) => (
 
-              <div
-                className="brand-feature"
-                key={index}
-              >
+                <div
+                  className="brand-feature"
+                  key={index}
+                >
 
-                <div className="brand-feature-dot" />
+                  <div className="brand-feature-dot" />
 
-                <span>
-                  {feature}
-                </span>
+                  <span>
+                    {feature}
+                  </span>
 
-              </div>
+                </div>
 
-            ))}
+              )
+            )}
 
           </div>
 
         </div>
 
+
+        {/* =====================================
+            RIGHT FORM PANEL
+        ====================================== */}
 
         <div className="auth-form-panel">
 
@@ -164,106 +298,142 @@ function Signup() {
             Create account
           </h1>
 
+
           <p className="auth-subtitle">
-            Start preparing for your next interview today
+            Start preparing for your next
+            interview today
           </p>
 
+
+          {/* =================================
+              ERROR MESSAGE
+          ================================== */}
 
           {error && (
 
             <div
               style={{
                 padding: "12px 16px",
-                background: "rgba(239,68,68,0.1)",
-                border: "1px solid rgba(239,68,68,0.25)",
+                background:
+                  "rgba(239,68,68,0.1)",
+                border:
+                  "1px solid rgba(239,68,68,0.25)",
                 borderRadius: "8px",
                 color: "#f87171",
                 fontSize: "14px",
-                marginBottom: "16px"
+                marginBottom: "16px",
               }}
             >
+
               {error}
+
             </div>
 
           )}
 
 
-          <form onSubmit={handleSignup}>
+          {/* =================================
+              NAME
+          ================================== */}
 
-            <div className="form-group">
+          <div className="form-group">
 
-              <label>
-                Full name
-              </label>
-
-              <input
-                type="text"
-                placeholder="Jane Smith"
-                value={name}
-                onChange={(e) =>
-                  setName(e.target.value)
-                }
-              />
-
-            </div>
+            <label>
+              Full name
+            </label>
 
 
-            <div className="form-group">
-
-              <label>
-                Email address
-              </label>
-
-              <input
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) =>
-                  setEmail(e.target.value)
-                }
-              />
-
-            </div>
-
-
-            <div className="form-group">
-
-              <label>
-                Password
-              </label>
-
-              <input
-                type="password"
-                placeholder="Min. 6 characters"
-                value={password}
-                onChange={(e) =>
-                  setPassword(e.target.value)
-                }
-              />
-
-            </div>
-
-
-            <button
-              type="submit"
-              className="btn-primary"
+            <input
+              type="text"
+              placeholder="Jane Smith"
+              value={name}
+              onChange={(e) =>
+                setName(e.target.value)
+              }
               disabled={loading}
-            >
-              {loading
-                ? "Creating account…"
-                : "Create account →"}
-            </button>
+            />
 
-          </form>
+          </div>
 
+
+          {/* =================================
+              EMAIL
+          ================================== */}
+
+          <div className="form-group">
+
+            <label>
+              Email address
+            </label>
+
+
+            <input
+              type="email"
+              placeholder="you@example.com"
+              value={email}
+              onChange={(e) =>
+                setEmail(e.target.value)
+              }
+              disabled={loading}
+            />
+
+          </div>
+
+
+          {/* =================================
+              PASSWORD
+          ================================== */}
+
+          <div className="form-group">
+
+            <label>
+              Password
+            </label>
+
+
+            <input
+              type="password"
+              placeholder="Min. 6 characters"
+              value={password}
+              onChange={(e) =>
+                setPassword(e.target.value)
+              }
+              disabled={loading}
+            />
+
+          </div>
+
+
+          {/* =================================
+              SIGNUP BUTTON
+          ================================== */}
+
+          <button
+            className="btn-primary"
+            onClick={handleSignup}
+            disabled={loading}
+          >
+
+            {loading
+              ? "Creating account…"
+              : "Create account →"}
+
+          </button>
+
+
+          {/* =================================
+              LOGIN LINK
+          ================================== */}
 
           <p className="auth-footer-text">
 
-            Already have an account?{" "}
+            Already have an account?
 
-            <Link to="/">
+            {" "}
+
+            <a href="/">
               Sign in
-            </Link>
+            </a>
 
           </p>
 
